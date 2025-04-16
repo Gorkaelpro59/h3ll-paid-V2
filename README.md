@@ -4,25 +4,26 @@ if _G.MainScriptLoaded then
 -- end
 -- _G.MainScriptLoaded = true
 
-local whitelist = {
-    "Xxdarkiller_10ZKT2" 
-}
+-- local whitelist = { 2932844883, 3211853358 } 
 
-local function isWhitelisted(username)
-    for _, whitelistedUser in ipairs(whitelist) do
-        if username == whitelistedUser then
-            return true
-        end
-    end
-    return false
-end
+-- local player = game.Players.LocalPlayer
+-- local playerId = player.UserId
 
-local player = game.Players.LocalPlayer
-local username = player.Name
+-- print("👤 Player ID detected:", playerId)
 
-if not isWhitelisted(username) then
-    player:Kick("You Have Executed This Script Without Being Whitelisted!")
-end
+-- local isWhitelisted = false
+-- for _, id in ipairs(whitelist) do
+--     if id == playerId then
+--         isWhitelisted = true
+--         break
+--     end
+-- end
+
+-- if not isWhitelisted then
+--     warn("❌ Access denied for ID:", playerId)
+--     player:Kick("🚫 You are not allowed to use this script kasi kupal ka ngani")
+--     return
+-- end
 
 local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))()
 local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
