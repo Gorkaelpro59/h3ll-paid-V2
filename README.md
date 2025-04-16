@@ -1,70 +1,11 @@
--- Function to safely load and execute code from a URL.
-local function safeLoadUrl(url)
-    -- Attempt to fetch the code from the provided URL.
-    local success, response = pcall(game.HttpGetAsync, game, url)
-    if not success then
-        error("Failed to perform HTTP GET for URL: " .. url)
-    end
-    if type(response) ~= "string" or response == "" then
-        error("Received invalid response from URL: " .. url)
-    end
 
-    -- Attempt to compile the fetched code.
-    local compiledFunc, compileErr = load(response)
-    if not compiledFunc then
-        error("Failed to compile code from URL: " .. url .. " Error: " .. tostring(compileErr))
-    end
-
-    -- Execute the compiled function safely.
-    local execSuccess, result = pcall(compiledFunc)
-    if not execSuccess then
-        error("Error executing code from URL: " .. url .. " Error: " .. tostring(result))
-    end
-    return result
-end
-
--- The following block is commented out and can be re-enabled if duplicate script prevention 
--- and player whitelisting are desired.
---[[
-if _G.MainScriptLoaded then
-    warn("🚫 Main script already loaded. Preventing duplicate execution.")
-    return
-end
-_G.MainScriptLoaded = true
-
-local whitelist = { 2932844883, 3211853358 } 
-
-local player = game.Players.LocalPlayer
-local playerId = player.UserId
-
-print("👤 Player ID detected:", playerId)
-
-local isWhitelisted = false
-for _, id in ipairs(whitelist) do
-    if id == playerId then
-        isWhitelisted = true
-        break
-    end
-end
-
-if not isWhitelisted then
-    warn("❌ Access denied for ID:", playerId)
-    player:Kick("🚫 You are not allowed to use this script kasi kupal ka ngani")
-    return
-end
-]]
-
--- Load external libraries safely.
-local Library = safeLoadUrl("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau")
-local SaveManager = safeLoadUrl("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau")
-local InterfaceManager = safeLoadUrl("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau")
-
+local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))()
+local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
+local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
 -- 🏠 Creation
--- [Add code below that uses the loaded Library, SaveManager, and InterfaceManager]
-
 local Window = Library:CreateWindow{
-    Title = "H3ll Paid",
-    SubTitle = "By Xxdarkiller",
+    Title = "Private Script of SLH",
+    SubTitle = "By SLH_YAMO",
     TabWidth = 125,
     Size = UDim2.fromOffset(830, 525),
     Resize = true,
@@ -1538,4 +1479,810 @@ local Dropdown = Tabs.Settings:CreateDropdown("TimeControl", {
 	},
 	Multi = false,
 	Default = "Day",
-	Callback = function(Val... (Tiempo restante: 26 KB)
+	Callback = function(Value)
+		local times = {
+			["Morning"] = 7,
+			["Day"] = 14,
+			["Night"] = 0
+		}
+		game:GetService("Lighting").ClockTime = times[Value]
+	end
+})
+
+local Input = Tabs.Killer:CreateInput("SpectatePlayer", {
+	Title = "Spectate Player",
+	Description = "",
+	Default = "",
+	Placeholder = "Player name...",
+	Numeric = false,
+	Finished = true,
+	Callback = function(Value)
+		local Players = game:GetService("Players")
+		local targetPlayer
+		targetPlayer = Players:FindFirstChild(Value)
+		if not targetPlayer then
+			for _, player in pairs(Players:GetPlayers()) do
+				if player.DisplayName:lower() == Value:lower() then
+					targetPlayer = player
+					break
+				end
+			end
+		end
+		if targetPlayer and targetPlayer.Character then
+			local camera = workspace.CurrentCamera
+			camera.CameraSubject = targetPlayer.Character.Humanoid
+			print("Now spectating: " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ")")
+		else
+			print("")
+		end
+	end
+})
+
+
+Tabs.Killer:CreateButton{
+	Title = "Stop Spying",
+	Description = "Switch camera back to your character",
+	Callback = function()
+		local Players = game:GetService("Players")
+		local camera = workspace.CurrentCamera
+		camera.CameraSubject = Players.LocalPlayer.Character.Humanoid
+		print("")
+	end
+}
+
+local function unequipAllPets()
+	local petsFolder = game:GetService("Players").LocalPlayer.petsFolder
+	for _, folder in pairs(petsFolder:GetChildren()) do
+		if folder:IsA("Folder") then
+			for _, pet in pairs(folder:GetChildren()) do
+				game:GetService("ReplicatedStorage").rEvents.equipPetEvent:fireServer("unequipPet", pet)
+			end
+		end
+	end
+end
+
+local function equipUniquePet(petName)
+	unequipAllPets()
+	task.wait(0.01)
+	for _, pet in pairs(game:GetService("Players").LocalPlayer.petsFolder.Unique:GetChildren()) do
+		if pet.Name == petName then
+			game:GetService("ReplicatedStorage").rEvents.equipPetEvent:fireServer("equipPet", pet)
+		end
+	end
+end
+
+local function findMachine(machineName)
+	local machine = workspace.machinesFolder:FindFirstChild(machineName)
+	if not machine then
+		for _, folder in pairs(workspace:GetChildren()) do
+			if folder:IsA("Folder") and folder.Name:find("machines") then
+				machine = folder:FindFirstChild(machineName)
+				if machine then
+					break
+				end
+			end
+		end
+	end
+	return machine
+end
+
+local function pressE()
+	local vim = game:GetService("VirtualInputManager")
+	vim:SendKeyEvent(true, "E", false, game)
+	task.wait(0.1)
+	vim:SendKeyEvent(false, "E", false, game)
+end
+
+local function useOneEgg()
+	local protein = game.Players.LocalPlayer.Backpack:FindFirstChild("Protein Egg")
+	if protein then
+		protein.Parent = game.Players.LocalPlayer.Character
+		task.wait(0.1)
+		local virtualInput = game:GetService("VirtualInputManager")
+		virtualInput:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+		task.wait(0.5)
+		virtualInput:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+		return true
+	end
+	return false
+end
+
+local function checkEggTimer()
+	local boostFolder = game.Players.LocalPlayer:FindFirstChild("boostTimersFolder")
+	if not boostFolder then
+		return false
+	end
+	local eggTimer = boostFolder:FindFirstChild("Protein Egg")
+	if not eggTimer then
+		return useOneEgg()
+	end
+	if tonumber(eggTimer.Value) <= 25 then
+		return useOneEgg()
+	end
+	return true
+end
+
+local isRunning = false
+local targetRebirth = math.huge
+local function unequipAllPets()
+	local petsFolder = game:GetService("Players").LocalPlayer.petsFolder
+	for _, folder in pairs(petsFolder:GetChildren()) do
+		if folder:IsA("Folder") then
+			for _, pet in pairs(folder:GetChildren()) do
+				game:GetService("ReplicatedStorage").rEvents.equipPetEvent:fireServer("unequipPet", pet)
+			end
+		end
+	end
+	task.wait(0.1)
+end
+
+local function createParticles(part)
+	local attachment = Instance.new("Attachment", part)
+	local codeParticle = Instance.new("ParticleEmitter", attachment)
+	codeParticle.Texture = "rbxassetid://244905904"
+	codeParticle.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 0)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 155, 0))
+	})
+	codeParticle.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	codeParticle.Lifetime = NumberRange.new(0.5, 1)
+	codeParticle.Rate = 50
+	codeParticle.Speed = NumberRange.new(5, 10)
+	codeParticle.SpreadAngle = Vector2.new(-180, 180)
+	local lightning = Instance.new("Beam", part)
+	lightning.Texture = "rbxassetid://446111271"
+	lightning.TextureSpeed = 3
+	lightning.Color = ColorSequence.new(Color3.fromRGB(0, 255, 0))
+	return {
+		codeParticle,
+		lightning
+	}
+end
+
+local RebirthInput = Tabs.Rebirth:CreateInput("RebirthInput", {
+	Title = "Target Rebirth",
+	Description = "Farm will stop at this rebirth count",
+	Default = "50000",
+	Placeholder = "Enter target rebirth...",
+	Numeric = true,
+	Finished = true,
+	Callback = function(Value)
+		targetRebirth = tonumber(Value) or math.huge
+	end
+})
+
+local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
+    Title = "Fast Rebirths",
+    Default = false,
+    Callback = function(Value)
+        isRunning = Value
+        getgenv().lift = Value
+
+        if not Value then return end
+
+        task.spawn(function()
+            while isRunning do
+                local player = game.Players.LocalPlayer
+                local rebirths = player.leaderstats.Rebirths.Value
+                local rebirthCost = 10000 + (5000 * rebirths)
+
+                
+                if player.ultimatesFolder:FindFirstChild("Golden Rebirth") then
+                    local goldenRebirths = player.ultimatesFolder["Golden Rebirth"].Value
+                    rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirths * 0.1)))
+                end
+
+               
+                local machine = findMachine("Jungle Bar Lift")
+                if machine and machine:FindFirstChild("interactSeat") then
+                    local character = player.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        character.HumanoidRootPart.CFrame = machine.interactSeat.CFrame * CFrame.new(0, 3, 0)
+                        task.wait(0.3) 
+                        pressE()
+                    end
+                end
+
+                
+                while isRunning and player.leaderstats.Strength.Value < rebirthCost do
+                    game:GetService("Players").LocalPlayer.muscleEvent:FireServer("rep")
+                    task.wait(0.03) 
+                end
+
+                
+                if player.leaderstats.Strength.Value >= rebirthCost then
+                    task.wait(0.2)
+                    game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest")
+                end
+
+                if not isRunning then break end
+                task.wait(0.05) 
+            end
+        end)
+    end
+})
+
+
+local isGrinding = false 
+
+local GrindToggle = Tabs.Rebirth:CreateToggle("SpeedGrind", {
+    Title = "Speed Grind (No Rebirth)",
+    Default = false,
+    Callback = function(Value)
+        isGrinding = Value 
+
+        if not Value then
+            return
+        end
+
+        for i = 1, 12 do
+            task.spawn(function()
+                while isGrinding do
+                    game:GetService("Players").LocalPlayer.muscleEvent:FireServer("rep")
+                    task.wait(0.083) 
+                end
+            end)
+        end
+    end
+})
+
+
+
+local currentRadius = 75
+local RadiusInput = Tabs.Killer:CreateInput("RadiusInput", {
+	Title = "Kill Aura Radius",
+	Description = "Set the kill aura radius (1-150)",
+	Default = "75",
+	Placeholder = "Enter radius...",
+	Callback = function(Value)
+		currentRadius = math.clamp(tonumber(Value) or 75, 1, 150)
+		Library:Notify({
+			Title = "Radius Updated",
+			Content = "Kill aura radius set to: " .. currentRadius,
+			Duration = 2
+		})
+	end
+})
+
+local Toggle = Tabs.Killer:AddToggle("Kill Nearby", {
+	Title = "Matrix Kill Aura",
+	Default = false,
+	Callback = function(v)
+		getgenv().killNearby = v
+		local radiusVisual = Instance.new("Part")
+		radiusVisual.Anchored = true
+		radiusVisual.CanCollide = false
+		radiusVisual.Transparency = 0.8
+		radiusVisual.Material = Enum.Material.ForceField
+		radiusVisual.Color = Color3.fromRGB(0, 255, 0)
+		radiusVisual.Size = Vector3.new(1, 0.1, 1)
+		task.spawn(function()
+			while getgenv().killNearby do
+				pcall(function()
+					local myCharacter = game.Players.LocalPlayer.Character
+					local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+					if myRoot then
+						radiusVisual.Parent = workspace
+						radiusVisual.Size = Vector3.new(currentRadius * 2, 0.1, currentRadius * 2)
+						radiusVisual.CFrame = myRoot.CFrame * CFrame.new(0, -2, 0)
+						local effects = createParticles(myRoot)
+						for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+							if player ~= game.Players.LocalPlayer and not whitelist[player.Name] then
+								local char = player.Character
+								local root = char and char:FindFirstChild("HumanoidRootPart")
+								if root and myRoot and myCharacter:FindFirstChild("LeftHand") then
+									local distance = (root.Position - myRoot.Position).Magnitude
+									if distance <= currentRadius then
+										local killEffect = Instance.new("Part")
+										killEffect.Anchored = true
+										killEffect.CanCollide = false
+										killEffect.Transparency = 0.5
+										killEffect.Material = Enum.Material.Neon
+										killEffect.Color = Color3.fromRGB(0, 255, 0)
+										killEffect.CFrame = root.CFrame
+										killEffect.Size = Vector3.new(5, 5, 5)
+										killEffect.Parent = workspace
+										game:GetService("TweenService"):Create(killEffect, TweenInfo.new(0.5), {
+											Size = Vector3.new(0, 0, 0),
+											Transparency = 1
+										}):Play()
+										game:GetService("Debris"):AddItem(killEffect, 0.5)
+										firetouchinterest(root, myCharacter.LeftHand, 0)
+										task.wait()
+										firetouchinterest(root, myCharacter.LeftHand, 1)
+										gettool()
+									end
+								end
+							end
+						end
+						task.wait(0.1)
+						for _, effect in ipairs(effects) do
+							effect:Destroy()
+						end
+					end
+				end)
+				task.wait(0.1)
+			end
+			radiusVisual:Destroy()
+		end)
+	end
+})
+
+local targetInput = Tabs.Killer:CreateInput("TargetInput", {
+	Title = "Target Player",
+	Description = "Enter Username or Display Name",
+	Default = "",
+	Placeholder = "Enter name here...",
+	Numeric = false,
+	Finished = true,
+	Callback = function(Value)
+		targetPlayer = Value
+	end
+})
+
+local TeleportAnimateButton = Tabs.Killer:CreateToggle("TeleportAnimate", {
+	Title = "Start Banging",
+	Description = "LMAO, Start it now",
+	Default = false,
+	Callback = function(Value)
+		getgenv().doAnimation = Value
+		if targetPlayer then
+			local character = game.Players.LocalPlayer.Character
+			local humanoid = character:WaitForChild("Humanoid")
+			local target = game.Players[targetPlayer].Character
+			local handsUp = Instance.new('Animation')
+			handsUp.AnimationId = 'rbxassetid://148840371'
+			local anim = humanoid:LoadAnimation(handsUp)
+			spawn(function()
+				while getgenv().doAnimation do
+					if target and target:FindFirstChild("HumanoidRootPart") then
+						character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
+					end
+					task.wait()
+				end
+			end)
+			anim:Play()
+			anim:AdjustSpeed(0.3)
+			while getgenv().doAnimation do
+				character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 1)
+				wait(0.2)
+				character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -1)
+				wait(0.2)
+			end
+			if not getgenv().doAnimation then
+				anim:Stop()
+			end
+		end
+	end
+})
+
+local function unequipAllPets()
+	local petsFolder = game:GetService("Players").LocalPlayer.petsFolder
+	for _, folder in pairs(petsFolder:GetChildren()) do
+		if folder:IsA("Folder") then
+			for _, pet in pairs(folder:GetChildren()) do
+				game:GetService("ReplicatedStorage").rEvents.equipPetEvent:fireServer("unequipPet", pet)
+			end
+		end
+	end
+	task.wait(0.1)
+end
+
+local petTypes = {
+	["Swift Samurai"] = "Equip All Swift Samurai",
+	["Tribal Overlord"] = "Equip All Tribal Overlord",
+	["Mighty Monster"] = "Equip All Mighty Monster",
+	["Wild Wizard"] = "Equip All Wild Wizard"
+}
+
+for petName, buttonTitle in pairs(petTypes) do
+	Tabs.Crystals:CreateButton({
+		Title = buttonTitle,
+		Callback = function()
+			unequipAllPets()
+			for _, pet in pairs(game:GetService("Players").LocalPlayer.petsFolder.Unique:GetChildren()) do
+				if pet.Name == petName then
+					game:GetService("ReplicatedStorage").rEvents.equipPetEvent:fireServer("equipPet", pet)
+				end
+			end
+		end
+	})
+end
+
+local eggToggle = Tabs.Main:CreateToggle("AutoEgg", {
+	Title = "Auto Use Protein Egg",
+	Description = "Automatically uses egg at 25 seconds remaining",
+	Default = false,
+	Callback = function(Value)
+		_G.AutoEgg = Value
+		while _G.AutoEgg do
+			local boostFolder = game.Players.LocalPlayer:FindFirstChild("boostTimersFolder")
+			if not boostFolder then
+				useOneEgg()
+				task.wait(1)
+				continue
+			end
+			local eggTimer = boostFolder:FindFirstChild("Protein Egg")
+			if not eggTimer then
+				useOneEgg()
+				task.wait(1)
+				continue
+			end
+			if tonumber(eggTimer.Value) <= 25 then
+				useOneEgg()
+			end
+			task.wait(1)
+		end
+	end
+})
+
+local Toggle = Tabs.AutoStuff:AddToggle("Auto Join Brawl Toggle", {
+	Title = "Auto Join Brawl",
+	Default = false,
+	Callback = function(v)
+		getgenv().joinbrawl = v
+		while getgenv().joinbrawl do
+			wait()
+			game:GetService("ReplicatedStorage").rEvents.brawlEvent:FireServer("joinBrawl")
+		end
+	end
+})
+
+local antiRebirthButton = Tabs.Misc:AddButton({
+	Title = "Anti Rebirth",
+	Callback = function()
+		local OldNameCall = nil
+		OldNameCall = hookmetamethod(game, "__namecall", function(self, ...)
+			local Args = {
+				...
+			}
+			if self.Name == "rebirthRemote" and Args[1] == "rebirthRequest" then
+				return
+			end
+			return OldNameCall(self, unpack(Args))
+		end)
+	end
+})
+
+local antiTradeButton = Tabs.Misc:AddButton({
+	Title = "Anti Accept Trade",
+	Callback = function()
+		local OldNameCall = nil
+		OldNameCall = hookmetamethod(game, "__namecall", function(self, ...)
+			local Args = {
+				...
+			}
+			if self.Name == "tradingEvent" and Args[1] == "acceptTrade" then
+				return
+			end
+			return OldNameCall(self, unpack(Args))
+		end)
+	end
+})
+
+local function createUltimateUpgrade(name, title, description)
+	return Tabs.AutoBuy:AddToggle(name, {
+		Title = title,
+		Default = false,
+		Callback = function(v)
+			if v then
+				Window:Dialog{
+					Title = "Confirm " .. title,
+					Content = "Are you sure you want to activate " .. description .. "?",
+					Buttons = {
+						{
+							Title = "Confirm",
+							Callback = function()
+								game:GetService("ReplicatedStorage").rEvents.ultimatesRemote:InvokeServer("upgradeUltimate", name)
+							end
+						},
+						{
+							Title = "Cancel",
+							Callback = function()
+								Tabs.AutoBuy:SetValue(name, false)
+							end
+						}
+					}
+				}
+			end
+		end
+	})
+end
+
+local ultimateUpgrades = {
+	{
+		name = "RepSpeed",
+		title = "+5% Rep Speed",
+		description = "+5% Rep Speed"
+	},
+	{
+		name = "PetSlot",
+		title = "+1 Pet Slot",
+		description = "+1 Pet Slot"
+	},
+	{
+		name = "ItemCapacity",
+		title = "+10 Item Capacity",
+		description = "+10 Item Capacity"
+	},
+	{
+		name = "DailySpin",
+		title = "+1 Daily Spin",
+		description = "+1 Daily Spin"
+	},
+	{
+		name = "ChestRewards",
+		title = "x2 Chest Rewards",
+		description = "x2 Chest Rewards"
+	},
+	{
+		name = "QuestRewards",
+		title = "x2 Quest Rewards",
+		description = "x2 Quest Rewards"
+	},
+	{
+		name = "MuscleMind",
+		title = "Muscle Mind",
+		description = "Muscle Mind"
+	},
+	{
+		name = "JungleSwift",
+		title = "Jungle Swift",
+		description = "Jungle Swift"
+	},
+	{
+		name = "InfernalHealth",
+		title = "Infernal Health",
+		description = "Infernal Health"
+	},
+	{
+		name = "GalaxyGains",
+		title = "Galaxy Gains",
+		description = "Galaxy Gains"
+	},
+	{
+		name = "DemonDamage",
+		title = "Demon Damage",
+		description = "Demon Damage"
+	},
+	{
+		name = "GoldenRebirth",
+		title = "Golden Rebirth",
+		description = "Golden Rebirth"
+	}
+}
+
+for _, upgrade in ipairs(ultimateUpgrades) do
+	createUltimateUpgrade(upgrade.name, upgrade.title, upgrade.description)
+end
+
+local autoWheelToggle = Tabs.AutoBuy:AddToggle("AutoWheel", {
+	Title = "Auto Spin Wheel",
+	Default = false,
+	Callback = function(v)
+		while v do
+			game:GetService("ReplicatedStorage").rEvents.openFortuneWheelRemote:InvokeServer("openFortuneWheel", game:GetService("ReplicatedStorage").fortuneWheelChances["Fortune Wheel"])
+			task.wait(1)
+		end
+	end
+})
+
+local autoGiftsToggle = Tabs.AutoBuy:AddToggle("AutoGifts", {
+	Title = "Auto Claim Gifts",
+	Default = false,
+	Callback = function(v)
+		while v do
+			for i = 1, 8 do
+				game:GetService("ReplicatedStorage").rEvents.freeGiftClaimRemote:InvokeServer("claimGift", i)
+			end
+			task.wait(1)
+		end
+	end
+})
+
+local function pressE()
+	local vim = game:GetService("VirtualInputManager")
+	vim:SendKeyEvent(true, "E", false, game)
+	task.wait(0.1)
+	vim:SendKeyEvent(false, "E", false, game)
+end
+
+local function autoLift()
+	while getgenv().working and task.wait() do
+		game:GetService("Players").LocalPlayer.muscleEvent:FireServer("rep")
+	end
+end
+
+local function teleportAndStart(machineName, position)
+	if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = position
+		task.wait(0.5)
+		pressE()
+		autoLift()
+	end
+end
+
+local locations = {
+	["Starter Island"] = true,
+	["Legend Beach"] = true,
+	["Frost Gym"] = true,
+	["Mythical Gym"] = true,
+	["Eternal Gym"] = true,
+	["Legend Gym"] = true,
+	["Muscle King Gym"] = true,
+	["Jungle Gym"] = true
+}
+
+local locationsList = {
+	"Starter Island",
+	"Legend Beach",
+	"Frost Gym",
+	"Mythical Gym",
+	"Eternal Gym",
+	"Legend Gym",
+	"Muscle King Gym",
+	"Jungle Gym"
+}
+
+local workoutPositions = {
+	["Bench Press"] = {
+		["Starter Island"] = CFrame.new(- 17.0609932, 3.31417918, - 2.48164988),
+		["Legend Beach"] = CFrame.new(470.334656, 3.31417966, - 321.053925),
+		["Frost Gym"] = CFrame.new(- 3013.24194, 39.2158546, - 335.036926),
+		["Mythical Gym"] = CFrame.new(2371.7356, 39.2158546, 1246.31555),
+		["Eternal Gym"] = CFrame.new(- 7176.19141, 45.394104, - 1106.31421),
+		["Legend Gym"] = CFrame.new(4111.91748, 1020.46674, - 3799.97217),
+		["Muscle King Gym"] = CFrame.new(- 8590.06152, 46.0167427, - 6043.34717),
+		["Jungle Gym"] = CFrame.new(-8173, 64, 1898)
+	},
+	["Squat"] = {
+		["Starter Island"] = CFrame.new(- 48.8711243, 3.31417918, - 11.8831778),
+		["Legend Beach"] = CFrame.new(470.334656, 3.31417966, - 321.053925),
+		["Frost Gym"] = CFrame.new(- 2933.47998, 29.6399612, - 579.946045),
+		["Mythical Gym"] = CFrame.new(2489.21484, 3.67686629, 849.051025),
+		["Eternal Gym"] = CFrame.new(- 7176.19141, 45.394104, - 1106.31421),
+		["Legend Gym"] = CFrame.new(4304.99023, 987.829956, - 4124.2334),
+		["Muscle King Gym"] = CFrame.new(- 8940.12402, 13.1642084, - 5699.13477),
+		["Jungle Gym"] = CFrame.new(-8352, 34, 2878)
+	},
+	["Deadlift"] = {
+		["Starter Island"] = CFrame.new(- 48.8711243, 3.31417918, - 11.8831778),
+		["Legend Beach"] = CFrame.new(470.334656, 3.31417966, - 321.053925),
+		["Frost Gym"] = CFrame.new(- 2933.47998, 29.6399612, - 579.946045),
+		["Mythical Gym"] = CFrame.new(2489.21484, 3.67686629, 849.051025),
+		["Eternal Gym"] = CFrame.new(- 7176.19141, 45.394104, - 1106.31421),
+		["Legend Gym"] = CFrame.new(4304.99023, 987.829956, - 4124.2334),
+		["Muscle King Gym"] = CFrame.new(- 8940.12402, 13.1642084, - 5699.13477)
+	},
+	["Pull Up"] = {
+		["Starter Island"] = CFrame.new(- 33.3047485, 3.31417918, - 11.8831778),
+		["Legend Beach"] = CFrame.new(470.334656, 3.31417966, - 321.053925),
+		["Frost Gym"] = CFrame.new(- 2933.47998, 29.6399612, - 579.946045),
+		["Mythical Gym"] = CFrame.new(2489.21484, 3.67686629, 849.051025),
+		["Eternal Gym"] = CFrame.new(- 7176.19141, 45.394104, - 1106.31421),
+		["Legend Gym"] = CFrame.new(4304.99023, 987.829956, - 4124.2334),
+		["Muscle King Gym"] = CFrame.new(- 8940.12402, 13.1642084, - 5699.13477),
+		["Jungle Gym"] = CFrame.new(-8666, 34, 2070)
+	},
+	["Boulder"] = {
+		["Starter Island"] = CFrame.new(- 33.3047485, 3.31417918, - 11.8831778),
+		["Legend Beach"] = CFrame.new(470.334656, 3.31417966, - 321.053925),
+		["Frost Gym"] = CFrame.new(- 2933.47998, 29.6399612, - 579.946045),
+		["Mythical Gym"] = CFrame.new(2489.21484, 3.67686629, 849.051025),
+		["Eternal Gym"] = CFrame.new(- 7176.19141, 45.394104, - 1106.31421),
+		["Legend Gym"] = CFrame.new(4304.99023, 987.829956, - 4124.2334),
+		["Muscle King Gym"] = CFrame.new(- 8940.12402, 13.1642084, - 5699.13477),
+		["Jungle Gym"] = CFrame.new(-8621, 34, 2684)
+	}
+}
+
+local workoutTypes = {
+	"Bench Press",
+	"Squat",
+	"Deadlift",
+	"Pull Up",
+	"Boulder"
+}
+for _, workoutType in ipairs(workoutTypes) do
+	local dropdown = Tabs.AutoStuff:CreateDropdown(workoutType .. " dropdown", {
+		Title = "Select " .. workoutType,
+		Description = "Choose Your Training Location",
+		Values = locationsList,
+		Multi = false,
+		Default = 1,
+		Callback = function(Value)
+			_G["select" .. string.lower(string.gsub(workoutType, " ", ""))] = Value
+		end
+	})
+	local toggle = Tabs.AutoStuff:CreateToggle(workoutType .. " Toggle", {
+		Title = "Farm " .. workoutType,
+		Description = "Auto Trains " .. workoutType,
+		Default = false,
+		Callback = function(Value)
+			getgenv().working = Value
+			if Value then
+				local selected = _G["select" .. string.lower(string.gsub(workoutType, " ", ""))]
+				if workoutPositions[workoutType][selected] then
+					teleportAndStart(workoutType, workoutPositions[workoutType][selected])
+				end
+			end
+		end
+	})
+end
+
+local treadmillDropdown = Tabs.AutoStuff:CreateDropdown("Tread Dropdown", {
+	Title = "Select TreadMill",
+	Values = {
+		"Tiny Island",
+		"Starter Island",
+		"Legend Beach",
+		"Frost Gym",
+		"Mythical Gym",
+		"Eternal Gym",
+		"Legend Gym",
+		"Jungle Gym"
+	},
+	Multi = false,
+	Default = "",
+	Callback = function(Value)
+		selecttreadmill = Value
+	end
+})
+
+treadmillDropdown:SetValue("Tiny Island")
+
+local treadmillPositions = {
+	["Tiny Island"] = {
+		pos = CFrame.new(- 31.8626194, 6.0588026, 2087.88672, - 0.999396682, - 9.72631931e-09, 0.034730725, - 6.63278898e-09, 1, 8.91870684e-08, - 0.034730725, 8.8902901e-08, - 0.999396682),
+		req = 0
+	},
+	["Starter Island"] = {
+		pos = CFrame.new(226.252472, 8.1526947, 219.366516, - 0.00880406145, 3.58277887e-08, - 0.999961257, - 4.41204939e-08, 1, 3.62176351e-08, 0.999961257, 4.44376482e-08, - 0.00880406145),
+		req = 600
+	},
+	["Legend Beach"] = {
+		pos = CFrame.new(- 365.798309, 44.5082932, - 501.618591, 0.00878552441, - 6.19950713e-09, 0.999961436, - 4.37451603e-10, 1, 6.20358964e-09, - 0.999961436, - 4.91936492e-10, 0.00878552441),
+		req = 3000
+	},
+	["Frost Gym"] = {
+		pos = CFrame.new(- 2933.47998, 29.6399612, - 579.946045, 0.0345239155, - 1.03010173e-07, 0.999403894, 1.03015294e-08, 1, 1.02715752e-07, - 0.999403894, 6.74923806e-09, 0.0345239155),
+		req = 3000
+	},
+	["Mythical Gym"] = {
+		pos = CFrame.new(2659.50635, 21.6095238, 934.690613, 0.999999881, 4.98906161e-08, 0.000502891606, - 4.98585742e-08, 1, - 6.37288338e-08, - 0.000502891606, 6.37037516e-08, 0.999999881),
+		req = 3000
+	},
+	["Eternal Gym"] = {
+		pos = CFrame.new(- 7176.19141, 45.394104, - 1106.31421, 0.971191287, - 2.38377185e-09, 0.238301158, 1.41694778e-09, 1, 4.22844915e-09, - 0.238301158, - 3.76897269e-09, 0.971191287),
+		req = 3500
+	},
+	["Legend Gym"] = {
+		pos = CFrame.new(4446.91699, 1004.46698, - 3983.76074, - 0.999961317, - 1.97616366e-08, 0.00879266672, - 1.93830077e-08, 1, 4.31365149e-08, - 0.00879266672, 4.29661292e-08, - 0.999961317),
+		req = 0
+	},
+	["Jungle Gym"] = {
+		pos = CFrame.new(-8137, 28, 2820),
+		req = 0
+	}
+}
+
+local treadmillToggle = Tabs.AutoStuff:CreateToggle("Tread Toggle", {
+	Title = "Farm TreadMill",
+	Default = false,
+	Callback = function(Value)
+		getgenv().tread = Value
+		game:GetService("RunService").RenderStepped:Connect(function()
+			if getgenv().tread and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+				local treadInfo = treadmillPositions[selecttreadmill]
+				if treadInfo and game:GetService("Players").LocalPlayer.Agility.Value > treadInfo.req then
+					game.Players.LocalPlayer.Character.Humanoid:Move(Vector3.new(0, 0, 100))
+					game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = treadInfo.pos
+					game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+				end
+			end
+		end)
+	end
+}) KB)
