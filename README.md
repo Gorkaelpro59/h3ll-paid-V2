@@ -1,34 +1,67 @@
+-- Function to safely load and execute code from a URL.
+local function safeLoadUrl(url)
+    -- Attempt to fetch the code from the provided URL.
+    local success, response = pcall(game.HttpGetAsync, game, url)
+    if not success then
+        error("Failed to perform HTTP GET for URL: " .. url)
+    end
+    if type(response) ~= "string" or response == "" then
+        error("Received invalid response from URL: " .. url)
+    end
+
+    -- Attempt to compile the fetched code.
+    local compiledFunc, compileErr = load(response)
+    if not compiledFunc then
+        error("Failed to compile code from URL: " .. url .. " Error: " .. tostring(compileErr))
+    end
+
+    -- Execute the compiled function safely.
+    local execSuccess, result = pcall(compiledFunc)
+    if not execSuccess then
+        error("Error executing code from URL: " .. url .. " Error: " .. tostring(result))
+    end
+    return result
+end
+
+-- The following block is commented out and can be re-enabled if duplicate script prevention 
+-- and player whitelisting are desired.
+--[[
 if _G.MainScriptLoaded then
---     warn("🚫 Main script already loaded. Preventing duplicate execution.")
---     return
--- end
--- _G.MainScriptLoaded = true
+    warn("🚫 Main script already loaded. Preventing duplicate execution.")
+    return
+end
+_G.MainScriptLoaded = true
 
--- local whitelist = { 2932844883, 3211853358 } 
+local whitelist = { 2932844883, 3211853358 } 
 
--- local player = game.Players.LocalPlayer
--- local playerId = player.UserId
+local player = game.Players.LocalPlayer
+local playerId = player.UserId
 
--- print("👤 Player ID detected:", playerId)
+print("👤 Player ID detected:", playerId)
 
--- local isWhitelisted = false
--- for _, id in ipairs(whitelist) do
---     if id == playerId then
---         isWhitelisted = true
---         break
---     end
--- end
+local isWhitelisted = false
+for _, id in ipairs(whitelist) do
+    if id == playerId then
+        isWhitelisted = true
+        break
+    end
+end
 
--- if not isWhitelisted then
---     warn("❌ Access denied for ID:", playerId)
---     player:Kick("🚫 You are not allowed to use this script kasi kupal ka ngani")
---     return
--- end
+if not isWhitelisted then
+    warn("❌ Access denied for ID:", playerId)
+    player:Kick("🚫 You are not allowed to use this script kasi kupal ka ngani")
+    return
+end
+]]
 
-local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))()
-local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
-local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
+-- Load external libraries safely.
+local Library = safeLoadUrl("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau")
+local SaveManager = safeLoadUrl("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau")
+local InterfaceManager = safeLoadUrl("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau")
+
 -- 🏠 Creation
+-- [Add code below that uses the loaded Library, SaveManager, and InterfaceManager]
+
 local Window = Library:CreateWindow{
     Title = "H3ll Paid",
     SubTitle = "By Xxdarkiller",
