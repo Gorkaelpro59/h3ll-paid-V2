@@ -6,7 +6,7 @@ end
 _G.MainScriptLoaded = true
 
 -- Define a whitelist of user IDs
-local whitelist = { 2932844883, 3211853358 } 
+local whitelist = { 2932844883, 8288752473 } 
 
 -- Get the local player and their ID
 local player = game.Players.LocalPlayer
