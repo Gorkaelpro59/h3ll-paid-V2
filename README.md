@@ -53,18 +53,32 @@ if not success or not InterfaceManager then
     return
 end
 
+-- Load external libraries
+local success, Library = pcall(loadstring, game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))
+if not success or not Library then
+    warn("❌ Failed to load Library.")
+    return
+end
+
 -- 🏠 Creation of the main window
-local Window = Library:CreateWindow{
-    Title = "Private Script of SLH",
-    SubTitle = "By SLH_YAMO",
-    TabWidth = 125,
-    Size = UDim2.fromOffset(830, 525),
-    Resize = true,
-    MinSize = Vector2.new(470, 380),
-    Acrylic = true,
-    Theme = "DuoTone Dark Sea",
-    MinimizeKey = Enum.KeyCode.RightControl
-}
+local success, Window = pcall(function()
+    return Library:CreateWindow{
+        Title = "Private Script of SLH",
+        SubTitle = "By SLH_YAMO",
+        TabWidth = 125,
+        Size = UDim2.fromOffset(830, 525),
+        Resize = true,
+        MinSize = Vector2.new(470, 380),
+        Acrylic = true,
+        Theme = "DuoTone Dark Sea",
+        MinimizeKey = Enum.KeyCode.RightControl
+    }
+end)
+
+if not success then
+    warn("❌ Failed to create window: " .. tostring(Window))
+    return
+end
 
 local Tabs = {
     Main = Window:CreateTab{
