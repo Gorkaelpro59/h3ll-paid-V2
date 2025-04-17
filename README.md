@@ -1,10 +1,3 @@
--- Prevent duplicate execution of the main script
-if _G.MainScriptLoaded then
-    warn("🚫 Main script already loaded. Preventing duplicate execution.")
-    return
-end
-_G.MainScriptLoaded = true
-
 -- Define a whitelist of user IDs
 local whitelist = { 2932844883, 8288752473 } 
 
