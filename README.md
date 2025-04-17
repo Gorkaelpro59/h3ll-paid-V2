@@ -10,8 +10,30 @@ local whitelist = { 2932844883, 8288752473 }
 
 -- Get the local player and their ID
 local player = game.Players.LocalPlayer
+
+-- Check if the player exists
 if not player then
     warn("❌ LocalPlayer not found.")
+    return
+end
+
+-- Get the player ID
+local playerId = player.UserId
+print("👤 Player ID detected:", playerId)
+
+-- Check if the player is whitelisted
+local isWhitelisted = false
+for _, id in ipairs(whitelist) do
+    if id == playerId then
+        isWhitelisted = true
+        break
+    end
+end
+
+-- Kick the player if they are not whitelisted
+if not isWhitelisted then
+    warn("❌ Access denied for ID:", playerId)
+    player:Kick("🚫 You are not allowed to use this script.")
     return
 end
 
