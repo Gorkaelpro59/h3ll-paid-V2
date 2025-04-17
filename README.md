@@ -77,7 +77,7 @@ end
 
 -- 🏠 Creation of the main window
 local success, Window = pcall(function()
-    return Library:CreateWindow{
+    return Library.CreateWindow{  -- Remove the colon to call the function correctly
         Title = "Private Script of SLH",
         SubTitle = "By SLH_YAMO",
         TabWidth = 125,
