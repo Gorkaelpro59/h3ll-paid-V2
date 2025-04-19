@@ -1798,22 +1798,24 @@ local GrindToggle = Tabs.Rebirth:CreateToggle("SpeedGrind", {
 
         -- Spawn a single task to handle the grinding loop
         task.spawn(function()
-            local sL, eV, t = tonumber("1") or 1, tonumber("50") or 50, tick()
+            local sL, eV = tonumber("1") or 1, tonumber("50") or 50
+            local t = tick() -- Guardamos el tiempo actual
+
             for i = sL, eV do
+                if not isGrinding then break end -- Verificamos si el toggle está apagado
+
                 -- Fire the event multiple times in quick succession
                 for _ = 1, 50 do
                     if not isGrinding then break end -- Check again inside the loop for faster stopping
                     game:GetService("Players").LocalPlayer.muscleEvent:FireServer("rep")
                 end
-                -- Wait briefly before the next burst, only if still grinding
-                if isGrinding then
-                    task.wait()
-                end
+
+                -- Esperar un breve momento antes de la siguiente iteración
+                task.wait(0.1) -- Puedes ajustar el tiempo de espera según sea necesario
             end
         end)
     end
 })
-
 
 local currentRadius = 75
 local RadiusInput = Tabs.Killer:CreateInput("RadiusInput", {
