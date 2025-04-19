@@ -1,145 +1,89 @@
--- Define a whitelist of user IDs
-local whitelist = { 2932844883, 8288752473 } 
+-- if _G.MainScriptLoaded then
+--     warn("🚫 Main script already loaded. Preventing duplicate execution.")
+--     return
+-- end
+-- _G.MainScriptLoaded = true
 
--- Get the local player and their ID
-local player = game.Players.LocalPlayer
+-- local whitelist = { 2932844883, 3211853358 } 
 
--- Check if the player exists
-if not player then
-    warn("❌ LocalPlayer not found.")
-    return
-end
+-- local player = game.Players.LocalPlayer
+-- local playerId = player.UserId
 
--- Get the player ID
-local playerId = player.UserId
-print("👤 Player ID detected:", playerId)
+-- print("👤 Player ID detected:", playerId)
 
--- Check if the player is whitelisted
-local isWhitelisted = false
-for _, id in ipairs(whitelist) do
-    if id == playerId then
-        isWhitelisted = true
-        break
-    end
-end
+-- local isWhitelisted = false
+-- for _, id in ipairs(whitelist) do
+--     if id == playerId then
+--         isWhitelisted = true
+--         break
+--     end
+-- end
 
--- Kick the player if they are not whitelisted
-if not isWhitelisted then
-    warn("❌ Access denied for ID:", playerId)
-    player:Kick("🚫 You are not allowed to use this script.")
-    return
-end
+-- if not isWhitelisted then
+--     warn("❌ Access denied for ID:", playerId)
+--     player:Kick("🚫 You are not allowed to use this script kasi kupal ka ngani")
+--     return
+-- end
 
-local playerId = player.UserId
-print("👤 Player ID detected:", playerId)
-
--- Check if the player is whitelisted
-local isWhitelisted = false
-for _, id in ipairs(whitelist) do
-    if id == playerId then
-        isWhitelisted = true
-        break
-    end
-end
-
--- Kick the player if they are not whitelisted
-if not isWhitelisted then
-    warn("❌ Access denied for ID:", playerId)
-    player:Kick("🚫 You are not allowed to use this script kasi kupal ka ngani")
-    return
-end
-
--- Load external libraries
-local success, Library = pcall(loadstring, game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))
-if not success or not Library then
-    warn("❌ Failed to load Library.")
-    return
-end
-
-local success, SaveManager = pcall(loadstring, game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))
-if not success or not SaveManager then
-    warn("❌ Failed to load SaveManager.")
-    return
-end
-
-local success, InterfaceManager = pcall(loadstring, game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))
-if not success or not InterfaceManager then
-    warn("❌ Failed to load InterfaceManager.")
-    return
-end
-
--- Load external libraries
-local success, Library = pcall(loadstring, game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))
-if not success or not Library then
-    warn("❌ Failed to load Library.")
-    return
-end
-
--- 🏠 Creation of the main window
-local success, Window = pcall(function()
-    return Library.CreateWindow{  -- Remove the colon to call the function correctly
-        Title = "Private Script of SLH",
-        SubTitle = "By SLH_YAMO",
-        TabWidth = 125,
-        Size = UDim2.fromOffset(830, 525),
-        Resize = true,
-        MinSize = Vector2.new(470, 380),
-        Acrylic = true,
-        Theme = "DuoTone Dark Sea",
-        MinimizeKey = Enum.KeyCode.RightControl
-    }
-end)
-
-if not success then
-    warn("❌ Failed to create window: " .. tostring(Window))
-    return
-end
-
-local Tabs = {
-    Main = Window:CreateTab{
-        Title = "Main",
-        Icon = "phosphor-house-bold"
-    },
-    AutoBuy = Window:CreateTab{
-        Title = "Auto Buy",
-        Icon = "phosphor-shopping-cart-bold"
-    },
-    AutoStuff = Window:CreateTab{
-        Title = "Auto Stuff",
-        Icon = "phosphor-robot-bold"
-    },
-    AutoFarm = Window:CreateTab{
-        Title = "Auto Farm",
-        Icon = "phosphor-robot-bold"
-    },
-    Rebirth = Window:CreateTab{
-        Title = "Rebirth",
-        Icon = "phosphor-arrows-clockwise-bold"
-    },
-    Killer = Window:CreateTab{
-        Title = "Killer",
-        Icon = "phosphor-sword-bold"
-    },
-    Crystals = Window:CreateTab{
-        Title = "Crystals",
-        Icon = "phosphor-diamond-bold"
-    },
-    Teleport = Window:CreateTab{
-        Title = "Teleport",
-        Icon = "phosphor-dog-bold"
-    },
-    Stats = Window:CreateTab{
-        Title = "Stats",
-        Icon = "phosphor-sparkle-bold"
-    },
-    Misc = Window:CreateTab{
-        Title = "Misc",
-        Icon = "phosphor-map-pin-bold"
-    },
-    Settings = Window:CreateTab{
-        Title = "Settings",
-        Icon = "phosphor-sliders-bold"
-    }
+local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))()
+local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
+local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
+-- 🏠 Creation
+local Window = Library:CreateWindow{
+    Title = "Private Script of SLH",
+    SubTitle = "By SLH_YAMO",
+    TabWidth = 125,
+    Size = UDim2.fromOffset(830, 525),
+    Resize = true,
+    MinSize = Vector2.new(470, 380),
+    Acrylic = true,
+    Theme = "DuoTone Dark Sea",
+    MinimizeKey = Enum.KeyCode.RightControl
+}local Tabs = {
+	Main = Window:CreateTab{
+		Title = "Main",
+		Icon = "phosphor-house-bold"
+	},
+	AutoBuy = Window:CreateTab{
+		Title = "Auto Buy",
+		Icon = "phosphor-shopping-cart-bold"
+	},
+	AutoStuff = Window:CreateTab{
+		Title = "Auto Stuff",
+		Icon = "phosphor-robot-bold"
+	},
+	AutoFarm = Window:CreateTab{
+		Title = "Auto Farm",
+		Icon = "phosphor-robot-bold"
+	},
+	Rebirth = Window:CreateTab{
+		Title = "Rebirth",
+		Icon = "phosphor-arrows-clockwise-bold"
+	},
+	Killer = Window:CreateTab{
+		Title = "Killer",
+		Icon = "phosphor-sword-bold"
+	},
+	Crystals = Window:CreateTab{
+		Title = "Crystals",
+		Icon = "phosphor-diamond-bold"
+	},
+	Teleport = Window:CreateTab{
+		Title = "Teleport",
+		Icon = "phosphor-dog-bold"
+	},
+	Stats = Window:CreateTab{
+		Title = "Stats",
+		Icon = "phosphor-sparkle-bold"
+	},
+	Misc = Window:CreateTab{
+		Title = "Misc",
+		Icon = "phosphor-map-pin-bold"
+	},
+	Settings = Window:CreateTab{
+		Title = "Settings",
+		Icon = "phosphor-sliders-bold"
+	}
 }
 
 local Options = Library.Options  
