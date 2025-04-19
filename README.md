@@ -12,7 +12,7 @@
 -- print("👤 Player ID detected:", playerId)
 
 -- local isWhitelisted = false
--- for _, id in inpairs(whitelist) do
+-- for _, id in ipairs(whitelist) do
 --     if id == playerId then
 --         isWhitelisted = true
 --         break
@@ -21,7 +21,7 @@
 
 -- if not isWhitelisted then
 --     warn("❌ Access denied for ID:", playerId)
---     player:Kick("🚫 You are not allowed to use this script kasi kupal ka ngani")
+--     player:Kick("🚫 You are not allowed to use this script")
 --     return
 -- end
 
