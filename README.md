@@ -1709,7 +1709,7 @@ local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
                             end
                         end
                     end
-                    task.wait(0.1)
+                    task.wait(0.01)
                 end
 
                 -- Equipar mascota
@@ -1741,7 +1741,7 @@ local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
                 local function pressE()
                     local inputManager = game:GetService("VirtualInputManager")
                     inputManager:SendKeyEvent(true, "E", false, game)
-                    task.wait(0.1)
+                    task.wait(0.01)
                     inputManager:SendKeyEvent(false, "E", false, game)
                 end
 
@@ -1764,7 +1764,7 @@ local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
                 if machine and machine:FindFirstChild("interactSeat") then
                     player.Character.HumanoidRootPart.CFrame = machine.interactSeat.CFrame * CFrame.new(0, 3, 0)
                     repeat
-                        task.wait(0.1)
+                        task.wait(0.01)
                         pressE()
                     until player.Character.Humanoid.Sit
                 end
@@ -1776,7 +1776,7 @@ local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
                 until player.leaderstats.Rebirths.Value > initialRebirths
 
                 if not fastRebirth then break end
-                task.wait(0.05)
+                task.wait(0.01)
             end
         end)
     end
