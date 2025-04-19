@@ -1684,52 +1684,88 @@ local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
     Title = "Fast Rebirths",
     Default = false,
     Callback = function(Value)
-        isRunning = Value
-        getgenv().lift = Value
+        fastRebirth = Value
+                        if fastRebirth then
+                        if fastRebirthThread and coroutine.status(fastRebirthThread) ~= "dead" then
+                                task.cancel(fastRebirthThread)
+                        end
 
-        if not Value then return end
+                        fastRebirthThread = task.spawn(function()
+                                local rEvents = ReplicatedStorage:FindFirstChild("rEvents")
+                                if not rEvents then
+                                warn("rEvents not found in ReplicatedStorage.")
+                                fastRebirth = false 
+                                return
+                                end
+                                local equipPetEvent = rEvents:FindFirstChild("equipPetEvent")
+                                local rebirthRemote = rEvents:FindFirstChild("rebirthRemote")
+                                if not equipPetEvent or not rebirthRemote then
+                                warn("Required remote events/functions (equipPetEvent, rebirthRemote) not found under rEvents.")
+                                fastRebirth = false 
+                                return
+                                end
 
-        task.spawn(function()
-            while isRunning do
-                local player = game.Players.LocalPlayer
-                local rebirths = player.leaderstats.Rebirths.Value
-                local rebirthCost = 10000 + (5000 * rebirths)
+                                local c = Players.LocalPlayer
 
-                
-                if player.ultimatesFolder:FindFirstChild("Golden Rebirth") then
-                    local goldenRebirths = player.ultimatesFolder["Golden Rebirth"].Value
-                    rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirths * 0.1)))
-                end
+                                local function unequipPets() 
+                                if not c or not c:FindFirstChild("petsFolder") then return end
+                                local f = c.petsFolder
+                                for _, folder in pairs(f:GetChildren()) do
+                                        if folder:IsA("Folder") then
+                                        for _, pet in pairs(folder:GetChildren()) do
+                                                if pet and equipPetEvent then
+                                                equipPetEvent:FireServer("unequipPet", pet)
+                                                end
+                                        end
+                                        end
+                                end
+                                task.wait(0.1)
+                                end
 
-               
-                local machine = findMachine("Jungle Bar Lift")
-                if machine and machine:FindFirstChild("interactSeat") then
-                    local character = player.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        character.HumanoidRootPart.CFrame = machine.interactSeat.CFrame * CFrame.new(0, 3, 0)
-                        task.wait(0.3) 
-                        pressE()
-                    end
-                end
+                                local function equipSpecificPet(petName) 
+                                if not c or not c:FindFirstChild("petsFolder") then return end
+                                unequipPets() 
+                                task.wait(0.01)
+                                local uniqueFolder = c.petsFolder:FindFirstChild("Unique")
+                                if not uniqueFolder then return end
+                                for _, pet in pairs(uniqueFolder:GetChildren()) do
+                                        if pet and pet.Name == petName and equipPetEvent then
+                                        equipPetEvent:FireServer("equipPet", pet)
+                                        break
+                                        end
+                                end
+                                end
 
-                
-                while isRunning and player.leaderstats.Strength.Value < rebirthCost do
-                    game:GetService("Players").LocalPlayer.muscleEvent:FireServer("rep")
-                    task.wait(0.03) 
-                end
+                                local function findMachine(petName) 
+                                local machinesFolder = workspace:FindFirstChild("machinesFolder")
+                                if not machinesFolder then
+                                        for _, s in pairs(workspace:GetChildren()) do
+                                        if s:IsA("Folder") and s.Name:find("machines") then
+                                                machinesFolder = s
+                                                break
+                                        end
+                                        end
+                                end
+                                if not machinesFolder then return nil end
+                                return machinesFolder:FindFirstChild(petName)
+                                end
 
-                
-                if player.leaderstats.Strength.Value >= rebirthCost then
-                    task.wait(0.2)
-                    game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest")
-                end
+                                local function pressInteractKey() 
+                                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                                task.wait(0.1)
+                                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                                end
 
-                if not isRunning then break end
-                task.wait(0.05) 
-            end
-        end)
-    end
-})
+                                while fastRebirth and task.wait() do
+                                if not c or not c.Character or not c.Character:FindFirstChild("Humanoid") then
+                                        warn("Player, Character or Humanoid not found during fast rebirth loop.")
+                                        task.wait(1) 
+                                        c = Players.LocalPlayer
+                                        if not c then fastRebirth = false; break end 
+                                        if not c.Character then player.CharacterAdded:Wait() end 
+                                        if not c.Character then fastRebirth = false; break end 
+                                        return
+                                end
 
 
 local isGrinding = false 
