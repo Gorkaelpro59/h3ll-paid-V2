@@ -1685,198 +1685,185 @@ local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
     Default = false,
     Callback = function(Value)
         isRunning = Value
-        getgenv().lift = Value -- Assuming this global variable is intended
+        getgenv().lift = Value -- Assuming getgenv().lift is still needed for external reasons
 
-        if not Value then
-            return -- Stop the loop if the toggle is turned off
-        end
+        if not Value then return end
 
-        -- Start the farming logic in a new thread
         task.spawn(function()
-            local player = Players.LocalPlayer
-            if not player then
-                warn("LocalPlayer not found.")
-                isRunning = false -- Stop if player is somehow nil
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local Players = game:GetService("Players")
+            local VirtualInputManager = game:GetService("VirtualInputManager")
+            local c = Players.LocalPlayer
+
+            if not c:FindFirstChild("petsFolder") then
+                warn("petsFolder not found for player.") -- Use warn instead of error in a loop
+                isRunning = false -- Stop the loop if essential folder is missing
                 return
             end
 
-            -- Helper function to unequip all pets
             local function unequipAllPets()
-                if not player:FindFirstChild("petsFolder") then
-                    warn("petsFolder not found for unequip.")
-                    return
-                end
-                local petsFolder = player.petsFolder
-                for _, folder in ipairs(petsFolder:GetChildren()) do
+                local petsFolder = c.petsFolder
+                if not petsFolder then return end
+                for _, folder in pairs(petsFolder:GetChildren()) do
                     if folder:IsA("Folder") then
-                        for _, pet in ipairs(folder:GetChildren()) do
-                            -- Check if the remote event exists
-                            if ReplicatedStorage:FindFirstChild("rEvents") and ReplicatedStorage.rEvents:FindFirstChild("equipPetEvent") then
-                                ReplicatedStorage.rEvents.equipPetEvent:FireServer("unequipPet", pet)
-                            else
-                                warn("equipPetEvent not found.")
-                                return -- Stop if event is missing
-                            end
+                        for _, pet in pairs(folder:GetChildren()) do
+                            ReplicatedStorage.rEvents.equipPetEvent:FireServer("unequipPet", pet)
                         end
                     end
                 end
-                task.wait(0.1) -- Small delay after unequipping
+                task.wait(.1) -- Give server time to process
             end
 
-            -- Helper function to equip a specific pet by name
             local function equipPetByName(petName)
-                 if not player:FindFirstChild("petsFolder") or not player.petsFolder:FindFirstChild("Unique") then
-                    warn("petsFolder or Unique subfolder not found for equip.")
-                    return
-                end
-                unequipAllPets() -- Unequip others first
-                task.wait(0.01)
-                for _, pet in ipairs(player.petsFolder.Unique:GetChildren()) do
+                local uniquePetsFolder = c.petsFolder and c.petsFolder:FindFirstChild("Unique")
+                if not uniquePetsFolder then return end
+
+                unequipAllPets() -- Unequip first
+                task.wait(.01) -- Small delay
+
+                for _, pet in pairs(uniquePetsFolder:GetChildren()) do
                     if pet.Name == petName then
-                         -- Check if the remote event exists
-                        if ReplicatedStorage:FindFirstChild("rEvents") and ReplicatedStorage.rEvents:FindFirstChild("equipPetEvent") then
-                            ReplicatedStorage.rEvents.equipPetEvent:FireServer("equipPet", pet)
-                            break -- Exit loop once pet is found and equip is fired
-                        else
-                             warn("equipPetEvent not found.")
-                             return -- Stop if event is missing
-                        end
+                        ReplicatedStorage.rEvents.equipPetEvent:FireServer("equipPet", pet)
+                        break -- Assume only one pet with this name needs equipping
                     end
                 end
-                 task.wait(0.1) -- Small delay after equipping
+                task.wait(.1) -- Give server time to process equip
             end
 
-            -- Helper function to find a machine by name
             local function findMachine(machineName)
-                local machine = workspace:FindFirstChild("machinesFolder") and workspace.machinesFolder:FindFirstChild(machineName)
+                local machine = workspace.machinesFolder:FindFirstChild(machineName)
                 if not machine then
                     -- Fallback search if not in the primary folder
                     for _, item in pairs(workspace:GetChildren()) do
-                        if item:IsA("Folder") and item.Name:find("machines", 1, true) then -- Case-insensitive search for folders containing "machines"
+                        if item:IsA("Folder") and item.Name:find("machines") then
                             machine = item:FindFirstChild(machineName)
                             if machine then break end
                         end
                     end
                 end
-                if not machine then
-                    warn("Machine not found:", machineName)
-                end
                 return machine
             end
 
-            -- Helper function to simulate pressing 'E'
-            local function pressE()
+            local function pressEKey()
                 VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
-                task.wait(0.1)
+                task.wait(.1)
                 VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
             end
 
-            -- Main farming loop
             while isRunning do
-                local playerCharacter = player.Character
-                local leaderstats = player:FindFirstChild("leaderstats")
-                local ultimatesFolder = player:FindFirstChild("ultimatesFolder")
-                local muscleEvent = player:FindFirstChild("muscleEvent")
-                local rebirthRemote = ReplicatedStorage:FindFirstChild("rEvents") and ReplicatedStorage.rEvents:FindFirstChild("rebirthRemote")
-
-                -- Basic checks for essential components
-                if not playerCharacter or not leaderstats or not muscleEvent or not rebirthRemote then
-                    warn("Essential player components missing (Character, leaderstats, muscleEvent, or rebirthRemote). Stopping farm.")
+                -- Ensure player data is still valid
+                if not c or not c.Parent then
                     isRunning = false
                     break
                 end
 
+                local leaderstats = c:FindFirstChild("leaderstats")
+                if not leaderstats then
+                    warn("leaderstats not found.")
+                    task.wait(1) -- Wait before retrying
+                    leaderstats = c:FindFirstChild("leaderstats") -- Retry finding leaderstats
+                    if not leaderstats then
+                       isRunning = false -- Stop if still not found
+                       break
+                    end
+                end
+
                 local currentRebirths = (leaderstats:FindFirstChild("Rebirths") and leaderstats.Rebirths.Value) or 0
                 local strengthStat = leaderstats:FindFirstChild("Strength")
+                local muscleEvent = c:FindFirstChild("muscleEvent")
+                local ultimatesFolder = c:FindFirstChild("ultimatesFolder")
 
-                if not strengthStat then
-                     warn("Strength leaderstat not found. Stopping farm.")
-                     isRunning = false
-                     break
+                if not strengthStat or not muscleEvent then
+                    warn("Strength stat or muscleEvent not found.")
+                    isRunning = false
+                    break
                 end
 
                 -- Calculate rebirth cost
                 local rebirthCost = 10000 + (5000 * currentRebirths)
                 if ultimatesFolder and ultimatesFolder:FindFirstChild("Golden Rebirth") then
-                    local goldenRebirthLevel = ultimatesFolder["Golden Rebirth"].Value
-                    rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirthLevel * 0.1)))
+                    local goldenRebirthValue = ultimatesFolder["Golden Rebirth"].Value
+                    rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirthValue * 0.1)))
                 end
 
-                -- Phase 1: Train Strength
+                -- Equip Strength Pet ("Swift Samurai")
                 equipPetByName("Swift Samurai")
+
+                -- Train Strength
                 while isRunning and strengthStat.Value < rebirthCost do
-                    -- Fire event multiple times for potentially faster gains, adjust batch size as needed
-                    for _ = 1, 10 do
-                         muscleEvent:FireServer("rep")
-                    end
-                    task.wait() -- Wait a short duration between batches
-                    -- Re-check leaderstats in case they got removed mid-loop
-                    if not player:FindFirstChild("leaderstats") or not player.leaderstats:FindFirstChild("Strength") then
-                        warn("Leaderstats or Strength stat disappeared during training. Stopping farm.")
+                    -- Check if player/stats still exist before firing event
+                    if not c or not c.Parent or not strengthStat or not muscleEvent then
                         isRunning = false
                         break
                     end
-                     strengthStat = player.leaderstats.Strength -- Update reference in case it changed
+                    -- Fire multiple times for potentially faster gains, adjust batch size as needed
+                    for _ = 1, 10 do
+                         muscleEvent:FireServer("rep")
+                    end
+                    task.wait() -- Yield thread briefly
                 end
 
-                if not isRunning then break end -- Exit if toggle was turned off during strength training
+                if not isRunning then break end -- Exit if toggled off during strength training
 
-                -- Phase 2: Interact with Machine and Rebirth
+                -- Equip Rebirth Pet ("Tribal Overlord")
                 equipPetByName("Tribal Overlord")
-                local machine = findMachine("Jungle Bar Lift")
-                local humanoid = playerCharacter:FindFirstChildOfClass("Humanoid")
-                local hrp = playerCharacter:FindFirstChild("HumanoidRootPart")
 
-                if machine and machine:FindFirstChild("interactSeat") and humanoid and hrp then
-                    local interactSeat = machine.interactSeat
-                    hrp.CFrame = interactSeat.CFrame * CFrame.new(0, 3, 0) -- Teleport near the seat
-                    task.wait(0.2) -- Wait briefly for teleport stabilization
+                -- Find and use Rebirth Machine ("Jungle Bar Lift")
+                local rebirthMachine = findMachine("Jungle Bar Lift")
+                if rebirthMachine and rebirthMachine:FindFirstChild("interactSeat") and c.Character and c.Character:FindFirstChild("HumanoidRootPart") and c.Character:FindFirstChild("Humanoid") then
+                    local hrp = c.Character.HumanoidRootPart
+                    local humanoid = c.Character.Humanoid
+                    local interactSeat = rebirthMachine.interactSeat
 
-                    -- Attempt to sit until successful or timeout/stopped
-                    local attempts = 0
-                    while isRunning and not humanoid.Sit and attempts < 10 do -- Limit attempts to prevent infinite loop
-                        pressE()
-                        task.wait(0.3) -- Wait for sit state change
-                        attempts = attempts + 1
+                    -- Teleport near the seat
+                    hrp.CFrame = interactSeat.CFrame * CFrame.new(0, 3, 0)
+                    task.wait(0.2) -- Wait for teleport settle
+
+                    -- Attempt to sit until successful or timeout/toggled off
+                    local sitAttempts = 0
+                    while isRunning and not humanoid.Sit and sitAttempts < 10 do
+                        pressEKey()
+                        task.wait(.2) -- Wait between attempts
+                        sitAttempts = sitAttempts + 1
                     end
-
-                    if not humanoid.Sit then
-                         warn("Failed to sit on the machine after multiple attempts.")
-                         -- Decide whether to continue or stop; for now, we'll try to rebirth anyway
-                    end
-
                 else
-                    warn("Could not find Jungle Bar Lift, its seat, Humanoid, or HumanoidRootPart. Skipping interaction.")
+                    warn("Could not find Jungle Bar Lift machine or player character components.")
+                    -- Decide whether to stop or continue without machine interaction
+                    -- For now, we'll proceed to attempt rebirth anyway
                 end
 
-                -- Phase 3: Rebirth
-                local initialRebirths = (leaderstats:FindFirstChild("Rebirths") and leaderstats.Rebirths.Value) or 0
+                if not isRunning then break end -- Exit if toggled off before rebirth
+
+                -- Attempt Rebirth
+                local initialRebirths = (leaderstats:FindFirstChild("Rebirths") and leaderstats.Rebirths.Value) or 0 -- Re-fetch just before rebirth
                 local rebirthAttempts = 0
                 repeat
-                    if not isRunning then break end -- Check before invoking
-                    local success, result = pcall(function()
-                        return rebirthRemote:InvokeServer("rebirthRequest")
-                    end)
-                    if not success then
-                        warn("Error invoking rebirthRemote:", result)
-                        -- Potentially break or retry after a longer delay depending on the error
+                    if not ReplicatedStorage.rEvents or not ReplicatedStorage.rEvents.rebirthRemote then
+                        warn("Rebirth remote event not found.")
+                        isRunning = false
+                        break
                     end
-                    task.wait(0.2) -- Wait between rebirth attempts
+                    ReplicatedStorage.rEvents.rebirthRemote:InvokeServer("rebirthRequest")
+                    task.wait(.2) -- Wait for server response/update
                     rebirthAttempts = rebirthAttempts + 1
-                    -- Re-check leaderstats
-                    leaderstats = player:FindFirstChild("leaderstats") -- Update reference
-                until not isRunning or not leaderstats or not leaderstats:FindFirstChild("Rebirths") or leaderstats.Rebirths.Value > initialRebirths or rebirthAttempts > 5 -- Stop if successful or too many attempts
-
-                if isRunning and leaderstats and leaderstats:FindFirstChild("Rebirths") and leaderstats.Rebirths.Value <= initialRebirths then
-                    warn("Rebirth did not seem successful after multiple attempts.")
-                end
+                    -- Re-fetch leaderstats and rebirths value after invoke
+                    leaderstats = c:FindFirstChild("leaderstats")
+                    if not leaderstats or not leaderstats:FindFirstChild("Rebirths") then
+                        warn("Leaderstats or Rebirths stat disappeared during rebirth attempt.")
+                        isRunning = false
+                        break
+                    end
+                -- Check if rebirths increased OR if max attempts reached OR if toggled off
+                until not isRunning or (leaderstats.Rebirths.Value > initialRebirths) or rebirthAttempts > 5
 
                 if not isRunning then break end -- Final check before looping
-                task.wait(0.5) -- Wait a bit before starting the next cycle
+
+                task.wait(0.5) -- Short delay before starting next cycle
             end
         end)
     end
 })
+
 
 local isGrinding = false 
 
