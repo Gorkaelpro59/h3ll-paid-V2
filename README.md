@@ -1684,285 +1684,168 @@ local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
     Title = "Fast Rebirths",
     Default = false,
     Callback = function(Value)
-        -- Use a unique identifier for this specific toggle's coroutine
-        local COROUTINE_ID = "FastRebirthCoroutine_UltimateFarm"
+        isRunning = Value
+        getgenv().lift = Value -- Assuming getgenv().lift is still needed for external reasons
 
-        -- Stop any existing coroutine associated with this ID
-        if _G[COROUTINE_ID] then
-            coroutine.close(_G[COROUTINE_ID])
-            _G[COROUTINE_ID] = nil
-        end
+        if not Value then return end
 
-        -- If the toggle is turned off, just return
-        if not Value then
-            getgenv().lift = false -- Assuming this global flag needs to be managed
-            return
-        end
-
-        getgenv().lift = true -- Set the global flag
-
-        -- Create and store the new coroutine
-        _G[COROUTINE_ID] = coroutine.create(function()
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
-            local Players = game:GetService("Players")
-            local VirtualInputManager = game:GetService("VirtualInputManager")
-            local Workspace = game:GetService("Workspace")
-            local c = Players.LocalPlayer
-
-            -- Helper function to safely get leaderstats values
-            local function getStatValue(statName)
-                local leaderstats = c:FindFirstChild("leaderstats")
-                if leaderstats then
-                    local stat = leaderstats:FindFirstChild(statName)
-                    return stat and stat.Value
-                end
-                return nil -- Return nil if leaderstats or the stat doesn't exist
-            end
-
-            -- Check essential components at the start
-            if not c:FindFirstChild("petsFolder") then
-                warn("Fast Rebirth: petsFolder not found for player.")
-                getgenv().lift = false -- Reset global flag on error
-                MainToggle:Update(false) -- Update the toggle state visually
-                return -- Stop the coroutine
-            end
-            if not c:FindFirstChild("muscleEvent") then
-                 warn("Fast Rebirth: muscleEvent not found for player.")
-                 getgenv().lift = false
-                 MainToggle:Update(false)
-                 return
-            end
-            if not ReplicatedStorage:FindFirstChild("rEvents", true) or not ReplicatedStorage.rEvents:FindFirstChild("equipPetEvent") or not ReplicatedStorage.rEvents:FindFirstChild("rebirthRemote") then
-                 warn("Fast Rebirth: Required remote events not found in ReplicatedStorage.rEvents.")
-                 getgenv().lift = false
-                 MainToggle:Update(false)
-                 return
-            end
-
-
-            local function unequipAllPets()
-                local petsFolder = c.petsFolder
-                if not petsFolder then return end
-                local equipEvent = ReplicatedStorage.rEvents.equipPetEvent
-                for _, folder in pairs(petsFolder:GetChildren()) do
-                    if folder:IsA("Folder") then
-                        for _, pet in pairs(folder:GetChildren()) do
-                            -- Check if coroutine was cancelled before firing
-                            if coroutine.status(_G[COROUTINE_ID]) == "dead" then return end
-                            equipEvent:FireServer("unequipPet", pet)
+        task.spawn(function()
+            local a = game:GetService("ReplicatedStorage")
+            local b = game:GetService("Players")
+            local c = b.LocalPlayer
+            local d = function(e)
+                local f = c.petsFolder
+                if not f then return end -- Added check for petsFolder existence
+                for g, h in pairs(f:GetChildren()) do
+                    if h:IsA("Folder") then
+                        for i, j in pairs(h:GetChildren()) do
+                            if a.rEvents and a.rEvents.equipPetEvent then -- Added check for event existence
+                                a.rEvents.equipPetEvent:FireServer("unequipPet", j)
+                            end
                         end
                     end
                 end
-                task.wait(.1) -- Give server time to process
-            end
-
-            local function equipPetByName(petName)
-                local uniquePetsFolder = c.petsFolder and c.petsFolder:FindFirstChild("Unique")
-                if not uniquePetsFolder then return end
-                local equipEvent = ReplicatedStorage.rEvents.equipPetEvent
-
-                unequipAllPets() -- Unequip first
-                if coroutine.status(_G[COROUTINE_ID]) == "dead" then return end -- Check after wait
-                task.wait(.01) -- Small delay
-
-                for _, pet in pairs(uniquePetsFolder:GetChildren()) do
-                    if pet.Name == petName then
-                        if coroutine.status(_G[COROUTINE_ID]) == "dead" then return end
-                        equipEvent:FireServer("equipPet", pet)
-                        break -- Assume only one pet with this name needs equipping
-                    end
-                end
-                task.wait(.1) -- Give server time to process equip
-            end
-
-            local function findMachine(machineName)
-                -- Prioritize standard location
-                local machinesFolder = Workspace:FindFirstChild("machinesFolder")
-                if machinesFolder then
-                    local machine = machinesFolder:FindFirstChild(machineName)
-                    if machine then return machine end
-                end
-
-                -- Fallback search if not in the primary folder or primary folder doesn't exist
-                for _, item in pairs(Workspace:GetChildren()) do
-                    if item:IsA("Folder") and item.Name:find("machines") then
-                        local machine = item:FindFirstChild(machineName)
-                        if machine then return machine end
-                    end
-                end
-                return nil -- Return nil if not found
-            end
-
-            local function pressEKey()
-                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
                 task.wait(.1)
-                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+            end
+            local k = function(l)
+                d() -- Unequip all first
+                task.wait(.01)
+                local uniquePetsFolder = c.petsFolder and c.petsFolder:FindFirstChild("Unique")
+                if not uniquePetsFolder then return end -- Added check for Unique folder
+
+                for m, n in pairs(uniquePetsFolder:GetChildren()) do
+                    if n.Name == l then
+                        if a.rEvents and a.rEvents.equipPetEvent then -- Added check for event existence
+                            a.rEvents.equipPetEvent:FireServer("equipPet", n)
+                            break -- Exit loop once pet is found and equipped
+                        end
+                    end
+                end
+                task.wait(.1) -- Wait after equipping
+            end
+            local o = function(p)
+                local q = workspace.machinesFolder:FindFirstChild(p)
+                if not q then
+                    for r, s in pairs(workspace:GetChildren()) do
+                        if s:IsA("Folder") and s.Name:find("machines") then
+                            q = s:FindFirstChild(p)
+                            if q then break end
+                        end
+                    end
+                end
+                return q
+            end
+            local t = function()
+                local u = game:GetService("VirtualInputManager")
+                u:SendKeyEvent(true, Enum.KeyCode.E, false, game) -- Use Enum.KeyCode.E
+                task.wait(.1)
+                u:SendKeyEvent(false, Enum.KeyCode.E, false, game) -- Use Enum.KeyCode.E
             end
 
-            -- Main loop - continues as long as the coroutine is running
-            while true do
-                -- Check if player still exists and has necessary components at the start of each loop
-                if not c or not c.Parent or not c:FindFirstChild("leaderstats") or not c:FindFirstChild("Character") or not c.Character:FindFirstChild("HumanoidRootPart") or not c.Character:FindFirstChild("Humanoid") then
-                    warn("Fast Rebirth: Player, leaderstats, or character components missing.")
-                    getgenv().lift = false
-                    MainToggle:Update(false)
-                    break -- Exit the loop
+            -- Use the outer scope 'isRunning' instead of 'fastRebirth'
+            while isRunning do
+                -- Add checks to ensure player and necessary components exist
+                if not c or not c.Parent or not c:FindFirstChild("leaderstats") or not c:FindFirstChild("petsFolder") or not c:FindFirstChild("muscleEvent") then
+                    warn("Player, leaderstats, petsFolder, or muscleEvent not found. Stopping.")
+                    isRunning = false
+                    break
                 end
 
-                local currentRebirths = getStatValue("Rebirths")
-                local currentStrength = getStatValue("Strength")
-                local muscleEvent = c.muscleEvent -- Already checked existence earlier
+                local leaderstats = c.leaderstats
+                local v = leaderstats.Rebirths.Value
+                local w = 10000 + (5000 * v)
+
                 local ultimatesFolder = c:FindFirstChild("ultimatesFolder")
-
-                if currentRebirths == nil or currentStrength == nil then
-                    warn("Fast Rebirth: Rebirths or Strength stat not found in leaderstats.")
-                    task.wait(1) -- Wait before retrying the loop
-                    if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end
-                    continue -- Skip to next iteration to re-check stats
-                end
-
-                -- Calculate rebirth cost
-                local rebirthCost = 10000 + (5000 * currentRebirths)
                 if ultimatesFolder and ultimatesFolder:FindFirstChild("Golden Rebirth") then
-                    local goldenRebirthValue = ultimatesFolder["Golden Rebirth"].Value
-                    rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirthValue * 0.1)))
+                    local x = ultimatesFolder["Golden Rebirth"].Value
+                    w = math.floor(w * (1 - (x * 0.1)))
                 end
 
-                -- Equip Strength Pet ("Swift Samurai")
-                equipPetByName("Swift Samurai")
-                if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end
+                -- Equip Strength Pet
+                k("Swift Samurai")
 
                 -- Train Strength
-                while currentStrength < rebirthCost do
-                    -- Check if coroutine was cancelled during training
-                    if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end
+                local strengthStat = leaderstats:FindFirstChild("Strength")
+                if not strengthStat then
+                    warn("Strength stat not found. Stopping.")
+                    isRunning = false
+                    break
+                end
 
-                    -- Check if player/stats still exist before firing event
-                    if not c or not c.Parent or not muscleEvent then
-                         warn("Fast Rebirth: Player or muscleEvent disappeared during strength training.")
-                         getgenv().lift = false
-                         MainToggle:Update(false)
-                         break -- Exit inner loop
+                while isRunning and strengthStat.Value < w do
+                     -- Check if player/stats still exist before firing event
+                    if not c or not c.Parent or not strengthStat or not c.muscleEvent then
+                        isRunning = false
+                        break
                     end
-                    local strengthStat = c.leaderstats:FindFirstChild("Strength")
-                    if not strengthStat then
-                        warn("Fast Rebirth: Strength stat disappeared during strength training.")
-                        getgenv().lift = false
-                        MainToggle:Update(false)
-                        break -- Exit inner loop
-                    end
-
-                    -- Fire multiple times for potentially faster gains, adjust batch size as needed
-                    for _ = 1, 10 do
-                         muscleEvent:FireServer("rep")
+                    for y = 1, 10 do
+                        c.muscleEvent:FireServer("rep")
                     end
                     task.wait() -- Yield thread briefly
-                    currentStrength = strengthStat.Value -- Update strength value
                 end
-                if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end -- Check after inner loop
 
-                -- Equip Rebirth Pet ("Tribal Overlord")
-                equipPetByName("Tribal Overlord")
-                if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end
+                if not isRunning then break end -- Exit if toggled off during strength training
 
-                -- Find and use Rebirth Machine ("Jungle Bar Lift")
-                local rebirthMachine = findMachine("Jungle Bar Lift")
-                if rebirthMachine and rebirthMachine:FindFirstChild("interactSeat") and c.Character and c.Character:FindFirstChild("HumanoidRootPart") and c.Character:FindFirstChild("Humanoid") then
+                -- Equip Rebirth Pet
+                k("Tribal Overlord")
+
+                -- Find and use Rebirth Machine
+                local z = o("Jungle Bar Lift")
+                if z and z:FindFirstChild("interactSeat") and c.Character and c.Character:FindFirstChild("HumanoidRootPart") and c.Character:FindFirstChild("Humanoid") then
                     local hrp = c.Character.HumanoidRootPart
                     local humanoid = c.Character.Humanoid
-                    local interactSeat = rebirthMachine.interactSeat
+                    local interactSeat = z.interactSeat
 
-                    -- Teleport near the seat only if not already close or sitting
-                    if not humanoid.Sit and (hrp.Position - interactSeat.Position).Magnitude > 5 then
-                         hrp.CFrame = interactSeat.CFrame * CFrame.new(0, 3, 0)
-                         task.wait(0.2) -- Wait for teleport settle
-                    end
+                    hrp.CFrame = interactSeat.CFrame * CFrame.new(0, 3, 0)
+                    task.wait(0.2) -- Wait for teleport settle
 
-                    -- Attempt to sit until successful or timeout
                     local sitAttempts = 0
-                    while not humanoid.Sit and sitAttempts < 10 do
-                        if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end -- Check before pressing E
-                        pressEKey()
-                        task.wait(.2) -- Wait between attempts
+                    repeat
+                        if not isRunning then break end -- Check toggle status
+                        task.wait(.1)
+                        t() -- Press E
                         sitAttempts = sitAttempts + 1
-                        -- Re-check humanoid state in case it got destroyed
-                        if not c.Character or not c.Character:FindFirstChild("Humanoid") then
-                            warn("Fast Rebirth: Humanoid disappeared while trying to sit.")
-                            break
-                        end
-                        humanoid = c.Character.Humanoid -- Update humanoid reference
-                    end
-                    if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end -- Check after trying to sit
+                    until humanoid.Sit or sitAttempts > 10 -- Stop trying after 10 attempts or if sitting
+
                 else
-                    warn("Fast Rebirth: Could not find Jungle Bar Lift machine or required player components.")
-                    -- Decide whether to stop or continue without machine interaction
-                    -- For now, we'll proceed to attempt rebirth anyway, but log the warning.
+                    warn("Could not find Jungle Bar Lift machine or player character components.")
+                    -- Consider if the script should stop or continue without the machine
                 end
+
+                if not isRunning then break end -- Exit if toggled off before rebirth
 
                 -- Attempt Rebirth
-                local initialRebirths = getStatValue("Rebirths")
-                if initialRebirths == nil then
-                    warn("Fast Rebirth: Rebirths stat disappeared before rebirth attempt.")
-                    getgenv().lift = false
-                    MainToggle:Update(false)
-                    break -- Exit the main loop
-                end
-
+                local A = leaderstats.Rebirths.Value -- Store initial rebirths
                 local rebirthAttempts = 0
-                local rebirthSuccess = false
-                local rebirthRemote = ReplicatedStorage.rEvents.rebirthRemote
                 repeat
-                    if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end -- Check before invoking
-
-                    rebirthRemote:InvokeServer("rebirthRequest")
+                    if not isRunning then break end -- Check toggle status
+                    if a.rEvents and a.rEvents.rebirthRemote then -- Check event exists
+                        a.rEvents.rebirthRemote:InvokeServer("rebirthRequest")
+                    else
+                        warn("Rebirth remote event not found. Stopping.")
+                        isRunning = false
+                        break
+                    end
                     task.wait(.2) -- Wait for server response/update
                     rebirthAttempts = rebirthAttempts + 1
-
-                    local newRebirths = getStatValue("Rebirths")
-                    if newRebirths == nil then
-                        warn("Fast Rebirth: Rebirths stat disappeared during rebirth attempt.")
-                        getgenv().lift = false
-                        MainToggle:Update(false)
-                        break -- Exit the repeat loop
+                    -- Re-fetch leaderstats and rebirths value after invoke
+                    leaderstats = c:FindFirstChild("leaderstats")
+                    if not leaderstats or not leaderstats:FindFirstChild("Rebirths") then
+                        warn("Leaderstats or Rebirths stat disappeared during rebirth attempt. Stopping.")
+                        isRunning = false
+                        break
                     end
+                -- Check if rebirths increased OR if max attempts reached OR if toggled off
+                until not isRunning or (leaderstats.Rebirths.Value > A) or rebirthAttempts > 5
 
-                    if newRebirths > initialRebirths then
-                        rebirthSuccess = true
-                    end
-
-                -- Check if rebirths increased OR if max attempts reached
-                until rebirthSuccess or rebirthAttempts > 5
-
-                if coroutine.status(_G[COROUTINE_ID]) == "dead" then break end -- Check after rebirth attempt
-
-                if not rebirthSuccess then
-                    warn("Fast Rebirth: Rebirth attempt failed after " .. rebirthAttempts .. " tries.")
-                    -- Optionally add a longer delay here or stop the script
-                end
+                if not isRunning then break end -- Final check before looping
 
                 task.wait(0.5) -- Short delay before starting next cycle
             end
-
-            -- Cleanup when the loop ends (either by toggle or error)
-            if _G[COROUTINE_ID] and coroutine.status(_G[COROUTINE_ID]) ~= "dead" then
-                 -- This part might not be reached if the coroutine is closed externally,
-                 -- but it's good practice for manual breaks or errors within the loop.
-                 getgenv().lift = false
-                 MainToggle:Update(false)
-                 _G[COROUTINE_ID] = nil -- Clear the global reference
-            end
         end)
-
-        -- Resume the coroutine immediately after creation
-        local success, err = coroutine.resume(_G[COROUTINE_ID])
-        if not success then
-            warn("Fast Rebirth Coroutine failed:", err)
-            getgenv().lift = false -- Ensure flag is off if coroutine fails immediately
-            MainToggle:Update(false) -- Update toggle state
-            _G[COROUTINE_ID] = nil -- Clear the reference on immediate failure
-        end
     end
 })
+
 
 
 local isGrinding = false 
