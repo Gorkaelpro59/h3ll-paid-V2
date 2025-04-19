@@ -12,7 +12,7 @@
 -- print("👤 Player ID detected:", playerId)
 
 -- local isWhitelisted = false
--- for _, id in ipairs(whitelist) do
+-- for _, id in inpairs(whitelist) do
 --     if id == playerId then
 --         isWhitelisted = true
 --         break
