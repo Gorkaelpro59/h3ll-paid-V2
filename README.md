@@ -1685,47 +1685,124 @@ local MainToggle = Tabs.Rebirth:CreateToggle("UltimateFarm", {
     Default = false,
     Callback = function(Value)
         isRunning = Value
-        getgenv().lift = Value
+        getgenv().lift = Value -- Sets a global variable, ensure this is intended
 
-        if not Value then return end
+        if not Value then
+            return -- Stop if the toggle is turned off
+        end
 
+        -- Start the farming loop in a new thread
         task.spawn(function()
-            while isRunning do
-                local player = game.Players.LocalPlayer
-                local rebirths = player.leaderstats.Rebirths.Value
-                local rebirthCost = 10000 + (5000 * rebirths)
+            local Players = game:GetService("Players")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local RunService = game:GetService("RunService") -- Use RunService.Heartbeat for waits if needed for performance
 
-                
-                if player.ultimatesFolder:FindFirstChild("Golden Rebirth") then
-                    local goldenRebirths = player.ultimatesFolder["Golden Rebirth"].Value
-                    rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirths * 0.1)))
+            while isRunning do
+                local player = Players.LocalPlayer
+                if not player then
+                    warn("LocalPlayer not found.")
+                    isRunning = false -- Stop if player is lost
+                    break
                 end
 
-               
-                local machine = findMachine("Jungle Bar Lift")
-                if machine and machine:FindFirstChild("interactSeat") then
-                    local character = player.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        character.HumanoidRootPart.CFrame = machine.interactSeat.CFrame * CFrame.new(0, 3, 0)
-                        task.wait(0.3) 
-                        pressE()
+                local leaderstats = player:FindFirstChild("leaderstats")
+                local ultimatesFolder = player:FindFirstChild("ultimatesFolder")
+                local character = player.Character
+
+                if not leaderstats or not leaderstats:FindFirstChild("Rebirths") or not leaderstats:FindFirstChild("Strength") then
+                    warn("Leaderstats (Rebirths/Strength) not found for player.")
+                    isRunning = false -- Stop if essential stats are missing
+                    break
+                end
+
+                local rebirths = leaderstats.Rebirths.Value
+                local currentStrength = leaderstats.Strength.Value
+
+                -- Calculate base rebirth cost
+                local rebirthCost = 10000 + (5000 * rebirths)
+
+                -- Apply Golden Rebirth discount if applicable
+                if ultimatesFolder then
+                    local goldenRebirth = ultimatesFolder:FindFirstChild("Golden Rebirth")
+                    if goldenRebirth then
+                        local goldenRebirths = goldenRebirth.Value
+                        rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirths * 0.1)))
                     end
                 end
 
-                
-                while isRunning and player.leaderstats.Strength.Value < rebirthCost do
-                    game:GetService("Players").LocalPlayer.muscleEvent:FireServer("rep")
-                    task.wait(0.03) 
+                -- Ensure cost doesn't go below a minimum (optional, but good practice)
+                rebirthCost = math.max(1, rebirthCost) -- Prevent zero or negative cost
+
+                -- Interact with the machine if needed (assuming findMachine and pressE exist)
+                -- This part might need adjustment based on how the game requires interaction
+                local machine = findMachine("Jungle Bar Lift") -- Ensure findMachine is defined
+                if machine and machine:FindFirstChild("interactSeat") then
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        -- Check if already close enough or interacting to avoid unnecessary teleporting
+                        local seat = machine.interactSeat
+                        local rootPart = character.HumanoidRootPart
+                        if (rootPart.Position - seat.Position).Magnitude > 5 then -- Only teleport if far
+                           rootPart.CFrame = seat.CFrame * CFrame.new(0, 3, 0)
+                           task.wait(0.3)
+                           pressE() -- Ensure pressE is defined
+                           task.wait(0.1) -- Wait a bit after pressing E
+                        end
+                    end
+                else
+                    warn("Could not find machine 'Jungle Bar Lift' or its interactSeat.")
+                    -- Decide if you should stop or continue without the machine
+                    -- isRunning = false
+                    -- break
                 end
 
-                
-                if player.leaderstats.Strength.Value >= rebirthCost then
-                    task.wait(0.2)
-                    game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest")
+                -- Grind strength until rebirth cost is met
+                while isRunning and currentStrength < rebirthCost do
+                    -- Check if player and necessary components still exist before firing event
+                    player = Players.LocalPlayer -- Re-fetch in case of respawn/changes
+                    if not player then isRunning = false; break end
+                    leaderstats = player:FindFirstChild("leaderstats")
+                    if not leaderstats or not leaderstats:FindFirstChild("Strength") then isRunning = false; break end
+
+                    local muscleEvent = player:FindFirstChild("muscleEvent") -- Check if event exists
+                    if muscleEvent and muscleEvent:IsA("RemoteEvent") then
+                         muscleEvent:FireServer("rep")
+                    else
+                        warn("muscleEvent RemoteEvent not found on player.")
+                        -- Maybe stop if the event is missing?
+                        -- isRunning = false
+                        -- break
+                    end
+
+                    task.wait(0.03) -- Small delay between reps
+                    currentStrength = leaderstats.Strength.Value -- Update current strength
                 end
 
+                -- Check if loop was stopped while grinding
                 if not isRunning then break end
-                task.wait(0.05) 
+
+                -- Attempt rebirth if strength is sufficient
+                if currentStrength >= rebirthCost then
+                    local rebirthRemote = ReplicatedStorage:FindFirstChild("rEvents") and ReplicatedStorage.rEvents:FindFirstChild("rebirthRemote")
+                    if rebirthRemote and rebirthRemote:IsA("RemoteFunction") then
+                        task.wait(0.2) -- Short delay before invoking
+                        local success, result = pcall(rebirthRemote.InvokeServer, rebirthRemote, "rebirthRequest")
+                        if not success then
+                            warn("Rebirth InvokeServer failed:", result)
+                        else
+                            -- Optional: Add a small delay after successful rebirth
+                            task.wait(0.5)
+                        end
+                    else
+                        warn("Rebirth RemoteFunction (rEvents.rebirthRemote) not found in ReplicatedStorage.")
+                        -- Decide if you should stop if rebirth fails
+                        -- isRunning = false
+                        -- break
+                    end
+                end
+
+                -- Final check before next loop iteration
+                if not isRunning then break end
+                task.wait(0.01) -- Small delay to prevent script exhaustion
             end
         end)
     end
