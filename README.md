@@ -30,8 +30,8 @@ local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.
 local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
 -- 🏠 Creation
 local Window = Library:CreateWindow{
-    Title = "Private Script of SLH",
-    SubTitle = "By SLH_YAMO",
+    Title = "Hell Paid Script",
+    SubTitle = "By Xxdarkiller",
     TabWidth = 125,
     Size = UDim2.fromOffset(830, 525),
     Resize = true,
