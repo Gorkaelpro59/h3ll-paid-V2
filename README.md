@@ -1,29 +1,29 @@
--- if _G.MainScriptLoaded then
---     warn("🚫 Main script already loaded. Preventing duplicate execution.")
---     return
--- end
--- _G.MainScriptLoaded = true
+ if _G.MainScriptLoaded then
+     warn("🚫 Main script already loaded. Preventing duplicate execution.")
+     return
+ end
+ _G.MainScriptLoaded = true
 
--- local whitelist = { 7847999917, 4305349227 } 
+ local whitelist = { 7847999917, 4305349227 } 
 
--- local player = game.Players.LocalPlayer
--- local playerId = player.UserId
+ local player = game.Players.LocalPlayer
+ local playerId = player.UserId
 
--- print("👤 Player ID detected:", playerId)
+ print("👤 Player ID detected:", playerId)
 
--- local isWhitelisted = false
--- for _, id in ipairs(whitelist) do
---     if id == playerId then
---         isWhitelisted = true
---         break
---     end
--- end
+ local isWhitelisted = false
+ for _, id in ipairs(whitelist) do
+     if id == playerId then
+         isWhitelisted = true
+         break
+     end
+ end
 
--- if not isWhitelisted then
---     warn("❌ Access denied for ID:", playerId)
---     player:Kick("🚫 You are not allowed to use this script")
---     return
--- end
+ if not isWhitelisted then
+     warn("❌ Access denied for ID:", playerId)
+     player:Kick("🚫 You are not allowed to use this script")
+     return
+ end
 
 local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))()
 local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
